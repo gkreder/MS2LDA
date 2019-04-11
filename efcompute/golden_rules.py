@@ -1,4 +1,4 @@
-from ef_constants import ATOM_MASSES, ATOM_VALENCES, DEFAULT_RULES_SWITCH, INFINITE, RULE_8_MAX_OCCURRENCES
+from .ef_constants import ATOM_MASSES, ATOM_VALENCES, DEFAULT_RULES_SWITCH, INFINITE, RULE_8_MAX_OCCURRENCES
 
 class golden_rules(object):
 
@@ -69,7 +69,7 @@ class golden_rules(object):
         """
         valence_sum = 0
         atoms = 0
-        for element, number in formula.iteritems():
+        for element, number in formula.items():
             valence_sum += ATOM_VALENCES[element] * number
             atoms += number
         if not (valence_sum % 2 == 0 and valence_sum >= 2 * (atoms - 1)):

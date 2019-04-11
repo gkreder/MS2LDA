@@ -1,8 +1,8 @@
 import sys
 import fractions
 from math import ceil, floor
-from golden_rules import golden_rules
-from ef_constants import INFINITE, ATOM_NAME_LIST, ATOM_MASSES, PROTON_MASS, DEFAULT_RULES_SWITCH
+from .golden_rules import golden_rules
+from .ef_constants import INFINITE, ATOM_NAME_LIST, ATOM_MASSES, PROTON_MASS, DEFAULT_RULES_SWITCH
 
 class ef_assigner(object):
     
@@ -27,7 +27,7 @@ class ef_assigner(object):
                 for key in rule_8_max_occurrences:
                     value = rule_8_max_occurrences[key]
                     if value == 0 and key in self.atoms:
-                        print key + " removed from the list of atoms to search"
+                        print(key + " removed from the list of atoms to search")
                         self.atoms.remove(key)
                         del self.atom_masses[key]                        
 
@@ -42,7 +42,7 @@ class ef_assigner(object):
 
             self.gr = golden_rules(rule_switch, rule_8_max_occurrences)
         
-        print "Atoms being considered = " + str(self.atoms)
+        print("Atoms being considered = " + str(self.atoms))
         self.scale_factor = scale_factor
         self.a = self._get_dictionary()
         self.rr = self._round_robin()
@@ -170,12 +170,12 @@ class ef_assigner(object):
 
                 if self.verbose:
                     if len(formulas) > 0:
-                        print "Searching for neutral mass %f (%d/%d) at tolerance %d ppm" % (precursor_mass, n, total, 
-                                                                                             conditional_ppm)                    
+                        print("Searching for neutral mass %f (%d/%d) at tolerance %d ppm" % (precursor_mass, n, total, 
+                                                                                             conditional_ppm))                    
                         if len(formulas_out[precursor_mass]) > 0:
-                            print "- found " + str(len(formulas)) + " candidate(s), best formula = " + closest
+                            print("- found " + str(len(formulas)) + " candidate(s), best formula = " + closest)
                         else:
-                            print "- found " + str(len(formulas)) + " candidate(s), nothing after filtering"                        
+                            print("- found " + str(len(formulas)) + " candidate(s), nothing after filtering")                        
                         sys.stdout.flush()
 
         return formulas_out, top_hit_string, precursor_mass_list

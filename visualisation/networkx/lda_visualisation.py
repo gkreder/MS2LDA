@@ -2,8 +2,8 @@
 Visualisation methods for the LDA results
 """
 
-import SimpleHTTPServer
-import SocketServer
+import http.server
+import socketserver
 import json
 import sys
 
@@ -64,7 +64,7 @@ def get_json_from_docdf(docdf, to_highlight, threshold, selected_motifs=None):
         node_id += 1
 
     for row_index, row_value in docdf.iterrows():
-        for col_index, col_value in row_value.iteritems():
+        for col_index, col_value in row_value.items():
             if col_value > 0:
                 docname, peakid = _get_docname(row_index)
                 topic = _get_topicname(col_index)
@@ -156,7 +156,7 @@ def get_json_from_topicdf(topicdf):
         node_id += 1
 
     for row_index, row_value in topicdf.iterrows():
-        for col_index, col_value in row_value.iteritems():
+        for col_index, col_value in row_value.items():
             if col_value > 0:
                 term = row_index
                 topic = col_index
@@ -170,8 +170,8 @@ def get_json_from_topicdf(topicdf):
         node_id = nodes[n]
         G.add_node(node_id, name=n)
 
-    print("Total nodes = " + str(G.number_of_nodes()))
-    print("Total edges = " + str(G.number_of_edges()))
+    print(("Total nodes = " + str(G.number_of_nodes())))
+    print(("Total edges = " + str(G.number_of_edges())))
 
     json_out = json_graph.node_link_data(G) # node-link format to serialize
     return json_out, G
@@ -179,16 +179,16 @@ def get_json_from_topicdf(topicdf):
 def export_docdf_to_networkx(infile):
     """ Exports docdf to networkx """
 
-    print("Loading " + infile)
+    print(("Loading " + infile))
     docdf = pd.read_csv(infile, index_col=0)
     d = get_json_from_docdf(docdf)
     json.dump(d, open('test.json','w'))
     print('Wrote node-link JSON data to test.json')
 
     PORT = 1234
-    Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-    httpd = SocketServer.TCPServer(("", PORT), Handler)
-    print("serving at port " + str(PORT))
+    Handler = http.server.SimpleHTTPRequestHandler
+    httpd = socketserver.TCPServer(("", PORT), Handler)
+    print(("serving at port " + str(PORT)))
     httpd.serve_forever()
 
 def get_network_graph(ms2lda, motifs_of_interest, verbose=True):
@@ -205,7 +205,7 @@ def get_network_graph(ms2lda, motifs_of_interest, verbose=True):
             remove_count += 1
             G.remove_node(node_id)
     if verbose:
-        print "Removed %d motifs from the graph because they're not in the list" % remove_count
+        print("Removed %d motifs from the graph because they're not in the list" % remove_count)
 
     # delete all unconnected nodes from the graph
     unconnected = []
@@ -215,7 +215,7 @@ def get_network_graph(ms2lda, motifs_of_interest, verbose=True):
             unconnected.append(node_id)
     G.remove_nodes_from(unconnected)
     if verbose:
-        print "Removed %d unconnected documents from the graph" % len(unconnected)
+        print("Removed %d unconnected documents from the graph" % len(unconnected))
 
     return G
 
@@ -376,7 +376,7 @@ def plot_subgraph(G, m2m_list, ms1_peakids_to_highlight, motif_idx, colour_map, 
     nx.draw_networkx_labels(SG, pos, motif_labels, font_size=label_fontsize)
 
     if save_to is not None:
-        print "Figure saved to %s" % save_to
+        print("Figure saved to %s" % save_to)
         plt.savefig(save_to, bbox_inches='tight')
     plt.show()
 
@@ -488,7 +488,7 @@ def plot_fragmentation_spectrum(ms2_df, ms1_row, motif_colour, motif_idx,
 
     # save figure
     if save_to is not None:
-        print "Figure saved to %s" % save_to
+        print("Figure saved to %s" % save_to)
         plt.savefig(save_to, bbox_inches='tight')
     plt.show()
 
@@ -520,8 +520,8 @@ def print_report(ms2lda, G, peak_id, motif_annotation, motif_words, motif_colour
     try:
         ms1_motifs = doc_motifs[peak_id]
     except KeyError:
-        print " - No M2M for this MS1 peak at the specified thresholding levels"
-        print
+        print(" - No M2M for this MS1 peak at the specified thresholding levels")
+        print()
         return None
 
     for m2m in ms1_motifs:
@@ -529,9 +529,9 @@ def print_report(ms2lda, G, peak_id, motif_annotation, motif_words, motif_colour
             m2m_annot = motif_annotation[m2m]
         except KeyError:
             m2m_annot = '?'
-        print " - M2M_%s\t: %s" % (m2m, m2m_annot)
-        print "\t\t  %s" % (motif_words[m2m])
-    print
+        print(" - M2M_%s\t: %s" % (m2m, m2m_annot))
+        print("\t\t  %s" % (motif_words[m2m]))
+    print()
 
     # get the ms2 info
     ms2_rows = ms2lda.ms2.loc[ms2lda.ms2['MSnParentPeakID'] == peak_id]
@@ -643,7 +643,7 @@ def map_standard_to_ms1(std_file, mass_tol, rt_tol, ms2lda, mode='POS', verbose=
             ms1_label[row[1]] = closest[1]
         elif len(res)>1:
             closest = None
-            min_dist = sys.maxint
+            min_dist = sys.maxsize
             for match_res in res:
                 match_mz = float(match_res[4])
                 match_rt = float(match_res[5])
@@ -656,8 +656,8 @@ def map_standard_to_ms1(std_file, mass_tol, rt_tol, ms2lda, mode='POS', verbose=
             ms1_label[row[1]] = closest[1]
 
     if verbose:
-        print "Matches found %d/%d" % (len(matches), len(std))
-        print
+        print("Matches found %d/%d" % (len(matches), len(std)))
+        print()
 
     ms1_list = []
     for match in matches:
@@ -666,9 +666,9 @@ def map_standard_to_ms1(std_file, mass_tol, rt_tol, ms2lda, mode='POS', verbose=
         value = str(ms1_row)
         pid = ms1_row[1]
         if verbose:
-            print "Standard %s" % key
-            print "MS1 %s" % value
-            print
+            print("Standard %s" % key)
+            print("MS1 %s" % value)
+            print()
         ms1_list.append(pid)
 
     return ms1_label, ms1_list
@@ -682,7 +682,7 @@ def load_motif_annotation(annot_file, verbose=False):
         key = int(item[0])
         val = item[1]
         if verbose:
-            print str(key) + "\t" + val
+            print(str(key) + "\t" + val)
         motif_annotation[key] = val
         motif_idx[key] = i
         i += 1

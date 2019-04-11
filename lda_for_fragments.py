@@ -1,4 +1,4 @@
-import cPickle
+import pickle
 import gzip
 import os
 import re
@@ -39,7 +39,7 @@ class Ms2Lda(object):
     def lcms_data_from_R(cls, fragment_filename, neutral_loss_filename, mzdiff_filename,
                  ms1_filename, ms2_filename, vocab_type=1):
 
-        print "Loading input files"
+        print("Loading input files")
         input_filenames = []
         fragment_data = None
         neutral_loss_data = None
@@ -88,7 +88,7 @@ class Ms2Lda(object):
         sd = coo_matrix(data)
         sd = sd.floor()
         npdata = np.array(sd.todense(), dtype='int32')
-        print "Data shape " + str(npdata.shape)
+        print("Data shape " + str(npdata.shape))
         df = pd.DataFrame(npdata)
         df.columns = data.columns
         df.index = data.index
@@ -124,24 +124,24 @@ class Ms2Lda(object):
     def resume_from(cls, project_in, verbose=True):
         start = timeit.default_timer()
         with gzip.GzipFile(project_in, 'rb') as f:
-            obj = cPickle.load(f)
+            obj = pickle.load(f)
             stop = timeit.default_timer()
             if verbose:
-                print "Project loaded from " + project_in + " time taken = " + str(stop-start)
-                print " - input_filenames = "
+                print("Project loaded from " + project_in + " time taken = " + str(stop-start))
+                print(" - input_filenames = ")
                 for fname in obj.input_filenames:
-                    print "\t" + fname
-                print " - df.shape = " + str(obj.df.shape)
+                    print("\t" + fname)
+                print(" - df.shape = " + str(obj.df.shape))
                 if hasattr(obj, 'model'):
-                    print " - K = " + str(obj.model.K)
+                    print(" - K = " + str(obj.model.K))
                     # print " - alpha = " + str(obj.model.alpha[0])
                     # print " - beta = " + str(obj.model.beta[0])
                     # print " - number of samples stored = " + str(len(obj.model.samples))
                 else:
-                    print " - No LDA model found"
-                print " - last_saved_timestamp = " + str(obj.last_saved_timestamp)
+                    print(" - No LDA model found")
+                print(" - last_saved_timestamp = " + str(obj.last_saved_timestamp))
                 if hasattr(obj, 'message'):
-                    print " - message = " + str(obj.message)
+                    print(" - message = " + str(obj.message))
             return obj
 
     @classmethod
@@ -198,7 +198,7 @@ class Ms2Lda(object):
         min_met = 2
         r,c = dmat.shape
         remove = []
-        col_names = np.array(range(max(rid)+1))
+        col_names = np.array(list(range(max(rid)+1)))
         row_names = np.array(unique_masses)
         for i in range(r):
             s = np.where(dmat[i,:]>0)[0]
@@ -230,7 +230,7 @@ class Ms2Lda(object):
         dmat = np.delete(dmat,remove,axis=0)
         row_names = np.delete(row_names,remove)
 
-        print dmat.shape,row_names.shape,col_names.shape
+        print(dmat.shape,row_names.shape,col_names.shape)
 
         # Turn into integer array with biggest peak in each spectra at 100
         dmat_int = np.zeros(dmat.shape,np.int)
@@ -255,7 +255,7 @@ class Ms2Lda(object):
                 use_native=True, random_state=None,
                 previous_model=None, sparse=False):
 
-        print "Fitting model with collapsed Gibbs sampling"
+        print("Fitting model with collapsed Gibbs sampling")
         self.n_topics = n_topics
         self.model = CollapseGibbsLda(self.df, self.vocab, n_topics, alpha, beta,
                                       previous_model=previous_model, random_state=random_state,
@@ -265,7 +265,7 @@ class Ms2Lda(object):
         start = timeit.default_timer()
         self.model.run(n_burn, n_samples, n_thin, use_native=use_native)
         stop = timeit.default_timer()
-        print "DONE. Time=" + str(stop-start)
+        print("DONE. Time=" + str(stop-start))
 
     def convert_corpus(self):
 
@@ -359,7 +359,7 @@ class Ms2Lda(object):
 
     def run_lda_vb(self, n_topics, n_its, alpha, beta):
 
-        print "Fitting model with variational Bayes"
+        print("Fitting model with variational Bayes")
         metadata, corpus, cd, tf = self.convert_corpus()
 
         start = timeit.default_timer()
@@ -380,7 +380,7 @@ class Ms2Lda(object):
         self.model.vocab = self.vocab
         self.model.term_frequency = tf
 
-        print "DONE. Time=" + str(stop-start)
+        print("DONE. Time=" + str(stop-start))
 
     def do_thresholding(self, th_doc_topic=0.05, th_topic_word=0.0):
 
@@ -456,7 +456,7 @@ class Ms2Lda(object):
 
         # create topic-word output file
         outfile = self._get_outfile(results_prefix, '_motifs.csv')
-        print "Writing Mass2Motif features to " + outfile
+        print("Writing Mass2Motif features to " + outfile)
         with open(outfile,'w') as f:
 
             for i, topic_dist in enumerate(self.topic_word):
@@ -479,11 +479,11 @@ class Ms2Lda(object):
         # write out topicdf and docdf
 
         outfile = self._get_outfile(results_prefix, '_features.csv')
-        print "Writing features X motifs to " + outfile
+        print("Writing features X motifs to " + outfile)
         self.topicdf.to_csv(outfile)
 
         outfile = self._get_outfile(results_prefix, '_docs.csv')
-        print "Writing docs X motifs to " + outfile
+        print("Writing docs X motifs to " + outfile)
         docdf = self.docdf.transpose()
         docdf.columns = self.topic_names
         docdf.to_csv(outfile)
@@ -493,9 +493,9 @@ class Ms2Lda(object):
         self.last_saved_timestamp = str(time.strftime("%c"))
         self.message = message
         with gzip.GzipFile(project_out, 'wb') as f:
-            cPickle.dump(self, f, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
             stop = timeit.default_timer()
-            print "Project saved to " + project_out + " time taken = " + str(stop-start)
+            print("Project saved to " + project_out + " time taken = " + str(stop-start))
 
     def persist_topics(self, topic_indices, model_out, words_out):
         self.model.save(topic_indices, model_out, words_out)
@@ -662,7 +662,7 @@ class Ms2Lda(object):
                 topic_map[i] = back
                 if not quiet:
                     output = front + back
-                    print output
+                    print(output)
         return word_map, topic_map
 
     def get_motif_contributions(self, parent_peak_id):
@@ -692,7 +692,7 @@ class Ms2Lda(object):
         contributions = {}
         for word in results:
             topics = Counter(results[word])
-            total = float(np.sum(topics.values()))
+            total = float(np.sum(list(topics.values())))
             ratio = { key : (topics[key]/total) for key in topics}
             contributions[word] = ratio
 
@@ -701,7 +701,7 @@ class Ms2Lda(object):
     def plot_posterior_alpha(self):
         posterior_alpha = self.model.posterior_alpha
         posterior_alpha = posterior_alpha / np.sum(posterior_alpha)
-        ind = range(len(posterior_alpha))
+        ind = list(range(len(posterior_alpha)))
         plt.bar(ind, posterior_alpha, 2)
 
     def annotate_with_sirius(self, sirius_platform="orbitrap", mode="pos", ppm_max=5, min_score=0.01, max_ms1=700,
@@ -747,11 +747,11 @@ class Ms2Lda(object):
                     mass_list_2.append(mass)
                     to_process_idx.append(n)
 
-            print
-            print "=================================================================="
-            print "Found " + str(len(mass_list_2)) + " masses for second-stage EF annotation"
-            print "=================================================================="
-            print
+            print()
+            print("==================================================================")
+            print("Found " + str(len(mass_list_2)) + " masses for second-stage EF annotation")
+            print("==================================================================")
+            print()
 
             # run second-stage EF annotation
             ef = ef_assigner(scale_factor=scale_factor, do_7_rules=True,
@@ -796,15 +796,15 @@ class Ms2Lda(object):
                 prev = mass
 
     def _print_annotate_banner(self, title, mode, ppm, scale_factor, max_mass):
-        print "***********************************"
-        print "Annotating " + title
-        print "***********************************"
-        print
-        print "- mode = " + mode
-        print "- ppm = " + str(ppm)
-        print "- scale_factor = " + str(scale_factor)
-        print "- max_mass = " + str(max_mass)
-        print
+        print("***********************************")
+        print("Annotating " + title)
+        print("***********************************")
+        print()
+        print("- mode = " + mode)
+        print("- ppm = " + str(ppm))
+        print("- scale_factor = " + str(scale_factor))
+        print("- max_mass = " + str(max_mass))
+        print()
         sys.stdout.flush()
 
     def _get_mass_list(self, target):

@@ -28,16 +28,16 @@ class Ms2Lda_Viz(object):
 
     def rank_motifs(self, sort_by="h_index", selected_motifs=None, top_N=None, interactive=False):
 
-        print "Ranking motifs ..."
+        print("Ranking motifs ...")
         self.sort_by = sort_by
         if sort_by == 'h_index':
             topic_sort_criteria = self._h_index()
         elif sort_by == 'in_degree':
             topic_sort_criteria = self._in_degree()
-        print "DONE!"
-        print
+        print("DONE!")
+        print()
 
-        sorted_topic_counts = sorted(topic_sort_criteria.items(), key=operator.itemgetter(1), reverse=True)
+        sorted_topic_counts = sorted(list(topic_sort_criteria.items()), key=operator.itemgetter(1), reverse=True)
 
         # also create a matrix of topics and their h-indices for later use in front-end visualisation
         if interactive:
@@ -80,11 +80,11 @@ class Ms2Lda_Viz(object):
 
             if not interactive:
                 if sort_by == 'h_index':
-                    print "Mass2Motif " + str(i) + " h-index=" + str(topic_ranking[i])
+                    print("Mass2Motif " + str(i) + " h-index=" + str(topic_ranking[i]))
                 elif sort_by == 'in_degree':
-                    print "Mass2Motif " + str(i) + " in-degree=" + str(topic_ranking[i])
-                    print "====================="
-                    print
+                    print("Mass2Motif " + str(i) + " in-degree=" + str(topic_ranking[i]))
+                    print("=====================")
+                    print()
 
             column_values = np.array(self.docdf.columns.values)
             doc_dist = self.docdf.iloc[[i]].as_matrix().flatten()
@@ -101,14 +101,14 @@ class Ms2Lda_Viz(object):
 
             if not interactive:
                 if len(top_n_docs) == 0:
-                    print "No parent peaks above the threshold found for this motif"
+                    print("No parent peaks above the threshold found for this motif")
                     continue
-                print "Parent peaks"
-                print
+                print("Parent peaks")
+                print()
                 if 'annotation' in self.ms1.columns:
-                    print '     %s\t%s\t\t%s\t\t%s\t\t%s\t\t%s' % ('peakID', 'mz', 'rt', 'int', 'score', 'annotation')
+                    print('     %s\t%s\t\t%s\t\t%s\t\t%s\t\t%s' % ('peakID', 'mz', 'rt', 'int', 'score', 'annotation'))
                 else:
-                    print '     %s\t%s\t\t%s\t\t%s\t\t%s' % ('peakID', 'mz', 'rt', 'int', 'score')
+                    print('     %s\t%s\t\t%s\t\t%s\t\t%s' % ('peakID', 'mz', 'rt', 'int', 'score'))
 
             parent_ids = []
             parent_masses = []
@@ -138,9 +138,9 @@ class Ms2Lda_Viz(object):
 
                 if not interactive:
                     if 'annotation' in ms1_row.columns:
-                        print '%-5d%-5d\t%3.5f\t%6.3f\t\t%.3e\t%.3f\t\t%s' % (count, peakid, mz, rt, intensity, prob, annot)
+                        print('%-5d%-5d\t%3.5f\t%6.3f\t\t%.3e\t%.3f\t\t%s' % (count, peakid, mz, rt, intensity, prob, annot))
                     else:
-                        print '%-5d%-5d\t%3.5f\t%6.3f\t\t%.3e\t%.3f' % (count, peakid, mz, rt, intensity, prob)
+                        print('%-5d%-5d\t%3.5f\t%6.3f\t\t%.3e\t%.3f' % (count, peakid, mz, rt, intensity, prob))
                 parent_ids.append(peakid)
                 parent_masses.append(mz)
                 parent_rts.append(rt)
@@ -211,9 +211,9 @@ class Ms2Lda_Viz(object):
             self.topic_wordfreqs[i] = wordfreq
 
             if not interactive:
-                print
-                print "Fragments"
-                print
+                print()
+                print("Fragments")
+                print()
             parent_topic_fragments = {}
             count = 1
             for t in zip(fragments, fragments_p):
@@ -226,14 +226,14 @@ class Ms2Lda_Viz(object):
                 ms2_rows = ms2_rows.loc[ms2_rows['MSnParentPeakID'].isin(parent_ids)]
 
                 if not interactive:
-                    print '%-5d%s (%.3f)' % (count, t[0], t[1])
+                    print('%-5d%s (%.3f)' % (count, t[0], t[1]))
                     if not ms2_rows.empty:
                         if 'annotation' in ms2_rows.columns:
-                            print ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity', 'annotation']].to_string(index=False, justify='left')
+                            print(ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity', 'annotation']].to_string(index=False, justify='left'))
                         else:
-                            print ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity']].to_string(index=False, justify='left')
+                            print(ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity']].to_string(index=False, justify='left'))
                     else:
-                        print "\tNothing found for the selected parent peaks"
+                        print("\tNothing found for the selected parent peaks")
 
                 count += 1
 
@@ -277,9 +277,9 @@ class Ms2Lda_Viz(object):
                         wordfreq[fragment] = 1
 
             if not interactive:
-                print
-                print "Losses"
-                print
+                print()
+                print("Losses")
+                print()
             parent_topic_losses = {}
             count = 1
             for t in zip(losses, losses_p):
@@ -292,14 +292,14 @@ class Ms2Lda_Viz(object):
                 ms2_rows = ms2_rows.loc[ms2_rows['MSnParentPeakID'].isin(parent_ids)]
 
                 if not interactive:
-                    print '%-5d%s (%.3f)' % (count, t[0], t[1])
+                    print('%-5d%s (%.3f)' % (count, t[0], t[1]))
                     if not ms2_rows.empty:
                         if 'annotation' in ms2_rows.columns:
-                            print ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity', 'annotation']].to_string(index=False, justify='left')
+                            print(ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity', 'annotation']].to_string(index=False, justify='left'))
                         else:
-                            print ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity']].to_string(index=False, justify='left')
+                            print(ms2_rows[['peakID', 'MSnParentPeakID', 'mz', 'rt', 'intensity']].to_string(index=False, justify='left'))
                     else:
-                        print "\tNothing found for the selected parent peaks"
+                        print("\tNothing found for the selected parent peaks")
 
                 count += 1
 
@@ -343,7 +343,7 @@ class Ms2Lda_Viz(object):
                         wordfreq[loss] = 1
 
             if not interactive:
-                print
+                print()
                 sys.stdout.flush()
 
             # plot the n_docs parent peaks in this topic
@@ -373,7 +373,7 @@ class Ms2Lda_Viz(object):
                 # save the plot data for interactive use later
                 self.topic_plots[i] = plot_data
                 self.topic_ms1_count[i] = num_peaks
-                print "Generating plots for Mass2Motif " + str(i) + " h-index=" + str(topic_ranking[i]) + ", degree=" + str(num_peaks)
+                print("Generating plots for Mass2Motif " + str(i) + " h-index=" + str(topic_ranking[i]) + ", degree=" + str(num_peaks))
 
                 # set coordinate of each circle too
                 x_coord = topic_ranking[i]
@@ -384,13 +384,13 @@ class Ms2Lda_Viz(object):
                 self.topic_coordinates.update({i:(x_coord, y_coord)})
 
         # convert topic_coordinates from dictionary to a list of coordinates, sorted by the topic id
-        sorted_coords = sorted(self.topic_coordinates.iteritems(), key=lambda key_value: key_value[0])
+        sorted_coords = sorted(iter(self.topic_coordinates.items()), key=lambda key_value: key_value[0])
         self.topic_coordinates = [item[1] for item in sorted_coords]
 
     def plot_cosine_clustering(self, motif_id, ions_of_interest, clustering, peak_names):
 
         C, P, G, pos, peak_nodes, cluster_interests = self._get_cosine_network_graph(ions_of_interest, clustering, peak_names)
-        interest_nodes = [n for i,n in peak_nodes.items() if i in ions_of_interest]
+        interest_nodes = [n for i,n in list(peak_nodes.items()) if i in ions_of_interest]
 
         scaling = 10
         fig = plt.figure(figsize=(12,12))
@@ -721,7 +721,7 @@ class Ms2Lda_Viz(object):
 
     # from http://stackoverflow.com/questions/8850142/matplotlib-overlapping-annotations
     def _get_text_positions(self, x_data, y_data, has_annots, txt_width, txt_width_annot, txt_height):
-        a = zip(y_data, x_data)
+        a = list(zip(y_data, x_data))
         text_positions = y_data.copy()
         for index, (y, x) in enumerate(a):
             has_annot = has_annots[index]
@@ -860,7 +860,7 @@ class Ms2Lda_Viz(object):
                         else:
                             break
 
-                print " - Mass2Motif " + str(i) + " h-index = " + str(h_index)
+                print(" - Mass2Motif " + str(i) + " h-index = " + str(h_index))
                 topic_counts[i] = h_index
 
         return topic_counts

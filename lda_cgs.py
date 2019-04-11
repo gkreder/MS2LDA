@@ -12,7 +12,7 @@ the Journal of machine Learning research 3 (2003): 993-1022.
 Proceedings of the Python for Scientific Computing Conference (SciPy). 2012.
 """
 
-import cPickle
+import pickle
 import sys
 import time
 from collections import namedtuple
@@ -45,7 +45,7 @@ class CollapseGibbsLda(object):
         - previous_model: previous LDA run, if any
         """
 
-        print "CGS LDA initialising"
+        print("CGS LDA initialising")
         self.sparse = sparse
         if not self.sparse:
             self.df = df.replace(np.nan, 0)
@@ -101,7 +101,7 @@ class CollapseGibbsLda(object):
 
                 # total no. of topics = old + new topics
                 self.K = self.K + self.previous_K
-                print "Total no. of topics = " + str(self.K)
+                print("Total no. of topics = " + str(self.K))
 
                 # set the first previous-K elements in alpha to the previous value
                 self.alpha = np.ones(self.K) * alpha
@@ -161,7 +161,7 @@ class CollapseGibbsLda(object):
                 self.ckn[k, n] += 1
                 self.ck[k] += 1
                 self.Z[(d, pos)] = k
-        print
+        print()
 
         # turn word counts in the document into a vector of word occurences
         self.document_indices = {}
@@ -227,7 +227,7 @@ class CollapseGibbsLda(object):
 
         # use the last sample only
         if self.n_burn == 0:
-            print "S=" + str(len(self.samples)) + ", using only the last sample."
+            print("S=" + str(len(self.samples)) + ", using only the last sample.")
             last_samp = self.samples[0]
             theta, phi, alpha_new = self._get_posterior_probs(last_samp.cdk, last_samp.ckn)
             margs = []
@@ -237,7 +237,7 @@ class CollapseGibbsLda(object):
             perps.append(perp)
             return phi, theta, alpha_new, margs, perps
 
-        print "S=" + str(len(self.samples)) + ", using all samples."
+        print("S=" + str(len(self.samples)) + ", using all samples.")
         thetas = []
         phis = []
         alphas = []
@@ -251,21 +251,21 @@ class CollapseGibbsLda(object):
         # average over the results
         S = len(self.samples)
 
-        print "Averaging over topic_words"
+        print("Averaging over topic_words")
         avg_theta = np.zeros_like(thetas[0])
         for theta in thetas:
             avg_theta += theta
         avg_theta /= len(thetas)
         sys.stdout.flush()
 
-        print "Averaging over doc_topics"
+        print("Averaging over doc_topics")
         avg_phi = np.zeros_like(phis[0])
         for phi in phis:
             avg_phi += phi
         avg_phi /= len(phis)
         sys.stdout.flush()
 
-        print "Averaging over posterior alphas"
+        print("Averaging over posterior alphas")
         avg_posterior_alpha = 0
         if len(alphas)>0:
             avg_posterior_alpha = np.zeros_like(alphas[0])
@@ -274,7 +274,7 @@ class CollapseGibbsLda(object):
             avg_posterior_alpha /= len(alphas)
         sys.stdout.flush()
 
-        print "Averaging over log evidence and perplexities"
+        print("Averaging over log evidence and perplexities")
         margs = []
         perps = []
         for s in range(S):
@@ -308,15 +308,15 @@ class CollapseGibbsLda(object):
         from lda_cgs_numpy import sample_numpy
         sampler_func = None
         if not use_native:
-            print "Using Numpy for LDA sampling"
+            print("Using Numpy for LDA sampling")
             sampler_func = sample_numpy
         else:
-            print "Using Numba for LDA sampling"
+            print("Using Numba for LDA sampling")
             try:
                 from lda_cgs_numba import sample_numba
                 sampler_func = sample_numba
-            except Exception:
-                print "Numba not found. Using Numpy for LDA sampling"
+            except Exception as numba_exception:
+                print("Numba not found. Using Numpy for LDA sampling")
                 sampler_func = sample_numpy
 
         # this will modify the various count matrices (Z, cdk, ckn, cd, ck) inside
@@ -333,8 +333,8 @@ class CollapseGibbsLda(object):
     @classmethod
     def load(cls, filename):
         with gzip.GzipFile(filename, 'rb') as f:
-            obj = cPickle.load(f)
-            print "Model loaded from " + filename
+            obj = pickle.load(f)
+            print("Model loaded from " + filename)
             return obj
 
     def save(self, topic_indices, model_out, words_out):
@@ -364,12 +364,12 @@ class CollapseGibbsLda(object):
         # dump the whole model out
         # binary mode ('b') is required for portability between Unix and Windows
         with gzip.GzipFile(model_out, 'wb') as f:
-            cPickle.dump(self, f, protocol=cPickle.HIGHEST_PROTOCOL)
-            print "Model saved to " + model_out
+            pickle.dump(self, f, protocol=pickle.HIGHEST_PROTOCOL)
+            print("Model saved to " + model_out)
 
         # also write out the selected vocabs into a text file
         # can be used for feature processing later ..
         with open(words_out, 'w') as f:
             for item in self.selected_vocab:
                 f.write("{}\n".format(item))
-        print "Words written to " + words_out
+        print("Words written to " + words_out)

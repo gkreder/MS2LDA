@@ -23,7 +23,7 @@ def sample_numba(random_state, n_burn, n_samples, n_thin,
     K_alpha = np.sum(alpha)    
 
     # prepare the input matrices
-    print "Preparing words"
+    print("Preparing words")
     all_d = []
     all_pos = []
     all_n = []
@@ -42,7 +42,7 @@ def sample_numba(random_state, n_burn, n_samples, n_thin,
     all_pos = np.array(all_pos, dtype=np.int32)
     all_n = np.array(all_n, dtype=np.int32)
 
-    print "Preparing Z matrix"    
+    print("Preparing Z matrix")    
     Z_mat = np.empty((D, max_pos+1), dtype=np.int32)
     for d in range(D):
         word_locs = document_indices[d]
@@ -50,7 +50,7 @@ def sample_numba(random_state, n_burn, n_samples, n_thin,
             k = Z[(d, pos)]
             Z_mat[d, pos] = k
     
-    print "DONE"
+    print("DONE")
 
     # loop over samples
     samples = []
@@ -60,9 +60,9 @@ def sample_numba(random_state, n_burn, n_samples, n_thin,
     
         s = samp+1        
         if s > n_burn:
-            print("Sample " + str(s) + " "),
+            print(("Sample " + str(s) + " "), end=' ')
         else:
-            print("Burn-in " + str(s) + " "),
+            print(("Burn-in " + str(s) + " "), end=' ')
 
         all_random = random_state.rand(total_words)
         ll = _nb_do_sampling(s, n_burn, total_words, all_d, all_pos, all_n, all_random, Z_mat,
@@ -72,7 +72,7 @@ def sample_numba(random_state, n_burn, n_samples, n_thin,
                           post, cumsum,
                           ckn, ck, previous_ckn, previous_ck)
         all_lls.append(ll)      
-        print(" Log likelihood = %.3f " % ll)
+        print((" Log likelihood = %.3f " % ll))
             
         # store all the samples after thinning
         if n_burn > 0 and s > n_burn:

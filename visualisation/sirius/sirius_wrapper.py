@@ -13,13 +13,13 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
     if mode != "pos" and mode != "neg":
         raise ValueError("mode is either 'pos' or 'neg'")
     else:
-        print "Running SIRIUS annotation with parameters:"
-        print "- platform = " + sirius_platform
-        print "- mode = " + mode
-        print "- ppm_max = " + str(ppm_max)
-        print "- min_score = " + str(min_score)
-        print "- max_ms1 = " + str(max_ms1)
-        print
+        print("Running SIRIUS annotation with parameters:")
+        print("- platform = " + sirius_platform)
+        print("- mode = " + mode)
+        print("- ppm_max = " + str(ppm_max))
+        print("- min_score = " + str(min_score))
+        print("- max_ms1 = " + str(max_ms1))
+        print()
 
     ms1 = ms1.copy()
     ms2 = ms2.copy()
@@ -33,7 +33,7 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
         
         parent_mass = ms1_row.mz
         if parent_mass > max_ms1:
-            print "Max MS1 reached. Stopping."
+            print("Max MS1 reached. Stopping.")
             break
 
         # make mgf data        
@@ -41,7 +41,7 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
         children = ms2[ms2.MSnParentPeakID==parent_peak_id]            
         mgf = make_mgf(ms1_row, children, mode, processed, n_row)
         if verbose:
-            print mgf
+            print(mgf)
     
         # write temp mgf file
         temp_dir = tempfile.mkdtemp()
@@ -100,16 +100,16 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
             # read the first file produced by sirius    
             files = sorted(os.listdir(temp_dir))
             if len(files) == 0: # sometimes nothing is produced?
-                print "REJECT\tnothing returned by SIRIUS"
+                print("REJECT\tnothing returned by SIRIUS")
                 continue
             
             first_filename = os.path.join(temp_dir, files[0])
             json_data = open(first_filename).read()
             data = json.loads(json_data) 
             
-        except subprocess.CalledProcessError, e:
-            print
-            print "SIRIUS produced error: " + str(e)
+        except subprocess.CalledProcessError as e:
+            print()
+            print("SIRIUS produced error: " + str(e))
             break # stop the loop
         finally:
             # close temp input file and remove it
@@ -125,8 +125,8 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
         if overall_score > min_score:
     
             if verbose:
-                print
-                print "JSON OUTPUT"
+                print()
+                print("JSON OUTPUT")
                 pp = pprint.PrettyPrinter(depth=4)
                 pp.pprint(data)
                 
@@ -148,7 +148,7 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
                         annot_count += 1
                         break
 
-            print "ACCEPT\t%s fragment(s) annotated with score %.2f" % (annot_count, overall_score)
+            print("ACCEPT\t%s fragment(s) annotated with score %.2f" % (annot_count, overall_score))
             if annot_count > 0:            
 
                 total_ms2 += annot_count
@@ -159,13 +159,13 @@ def annotate_sirius(ms1, ms2, sirius_platform='orbitrap', mode="pos", ppm_max=5,
                 total_ms1 += 1
         
         else:
-            print "REJECT\tscore = %.2f is too low" % overall_score
+            print("REJECT\tscore = %.2f is too low" % overall_score)
         processed += 1
                                 
     nrow_ms1 = ms1.shape[0]
     nrow_ms2 = ms2.shape[0]
-    print
-    print "Total annotations MS1=%s/%s, MS2=%s/%s" % (total_ms1, nrow_ms1, total_ms2, nrow_ms2)
+    print()
+    print("Total annotations MS1=%s/%s, MS2=%s/%s" % (total_ms1, nrow_ms1, total_ms2, nrow_ms2))
     return ms1, ms2
             
 def make_mgf(ms1_row, children, mode, processed, total):
@@ -178,7 +178,7 @@ def make_mgf(ms1_row, children, mode, processed, total):
     fragment_mzs = children.mz.values
     fragment_intensities = children.intensity.values
     n_frags = len(fragment_mzs)    
-    print "%5d/%5d pID %4d m/z %5.5f int %.4e n_frags %2d\t" % (processed, total, parent_peak_id, parent_mass, parent_intensity, n_frags),
+    print("%5d/%5d pID %4d m/z %5.5f int %.4e n_frags %2d\t" % (processed, total, parent_peak_id, parent_mass, parent_intensity, n_frags), end=' ')
     
     # create temp mgf file
     mgf = "BEGIN IONS\n"
@@ -216,8 +216,8 @@ def main():
     ms2_filename = '../../input/final/Beer1neg_MS1filter_Method3_ms2_annotated.csv'
     annot_ms1.to_csv(ms1_filename)
     annot_ms2.to_csv(ms2_filename)
-    print "Annotated MS1 results written to " + ms1_filename
-    print "Annotated MS2 results written to " + ms2_filename
+    print("Annotated MS1 results written to " + ms1_filename)
+    print("Annotated MS2 results written to " + ms2_filename)
 
 if __name__ == "__main__":
     main()

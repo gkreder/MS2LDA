@@ -25,11 +25,11 @@ class VariationalLDA(object):
 			self.n_docs = len(self.corpus)
 			if self.word_index == None:
 				self.word_index = self.find_unique_words()
-			print "Object created with {} documents".format(self.n_docs)
+			print("Object created with {} documents".format(self.n_docs))
 			self.n_words = len(self.word_index)
 			self.make_doc_index()
 			if self.normalise > -1:
-				print "Normalising intensities"
+				print("Normalising intensities")
 				self.normalise_intensities()
 
 		self.K = K
@@ -57,10 +57,10 @@ class VariationalLDA(object):
 	def add_fixed_topics_formulas(self,topics,prob_thresh = 0.5):
 		# Adds fixed topics by matching on chemical formulas
 		from formula import Formula
-		print "Matching topics based on formulas"
+		print("Matching topics based on formulas")
 		ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
 		ti = sorted(ti,key = lambda x:x[1])
-		topic_reverse,_ = zip(*ti)
+		topic_reverse,_ = list(zip(*ti))
 		self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
 		self.n_fixed_topics = 0
 
@@ -79,7 +79,7 @@ class VariationalLDA(object):
 		for topic in topics['beta']:
 			matched_probability = 0.0
 			matches = {}
-			for word,probability in topics['beta'][topic].items():
+			for word,probability in list(topics['beta'][topic].items()):
 				split_word = word.split('_')
 				if len(split_word) == 3: # it has a formula
 					formula_string = str(Formula(split_word[2]))
@@ -92,8 +92,8 @@ class VariationalLDA(object):
 						matches[word] = matched_word
 						matched_probability += probability
 
-			print "Topic: {}, {} probability matched ({})".format(topic,matched_probability,
-				topics['topic_metadata'][topic].get('annotation',""))
+			print("Topic: {}, {} probability matched ({})".format(topic,matched_probability,
+				topics['topic_metadata'][topic].get('annotation',"")))
 			if matched_probability > prob_thresh:
 				# We have a match
 				for word in matches:
@@ -101,17 +101,17 @@ class VariationalLDA(object):
 				# Normalise
 				self.beta_matrix[self.n_fixed_topics,:] /= self.beta_matrix[self.n_fixed_topics,:].sum()
 				topic_here = topic_reverse[self.n_fixed_topics]
-				print "Match accepted, storing as {}".format(topic_here)
+				print("Match accepted, storing as {}".format(topic_here))
 				self.topic_metadata[topic_here]['type'] = 'fixed'
-				for key,val in topics['topic_metadata'][topic].items():
+				for key,val in list(topics['topic_metadata'][topic].items()):
 					self.topic_metadata[topic_here][key] = val
 				self.n_fixed_topics += 1
 
 	def add_fixed_topics(self,topics,topic_metadata = None,mass_tol = 5,prob_thresh = 0.5):
-		print "Matching topics"
+		print("Matching topics")
 		ti = [(topic,self.topic_index[topic]) for topic in self.topic_index]
 		ti = sorted(ti,key = lambda x:x[1])
-		topic_reverse,_ = zip(*ti)
+		topic_reverse,_ = list(zip(*ti))
 		self.beta_matrix = np.zeros((self.K,len(self.word_index)),np.float)
 		self.n_fixed_topics = 0
 		fragment_masses = np.array([float(f.split('_')[1]) for f in self.word_index if f.startswith('fragment')])
@@ -120,7 +120,7 @@ class VariationalLDA(object):
 		loss_names = [f for f in self.word_index if f.startswith('loss')]
 
 		for topic in topics:
-			print "Mass2Motif: {}".format(topic)
+			print("Mass2Motif: {}".format(topic))
 			topic_name_here = topic_reverse[self.n_fixed_topics]
 
 			# self.n_fixed_topics = len(topics)
@@ -152,7 +152,7 @@ class VariationalLDA(object):
 					else:
 						# print "\t Couldn't match {}".format(word)
 						pass
-			print "\t matched {} of the probability".format(probability_matched)
+			print("\t matched {} of the probability".format(probability_matched))
 			if probability_matched > prob_thresh:
 				self.topic_metadata[topic_name_here]['type'] = 'fixed'
 				self.beta_matrix[self.n_fixed_topics,:] = temp_beta
@@ -167,7 +167,7 @@ class VariationalLDA(object):
 
 		# Normalise
 		self.beta_matrix[:self.n_fixed_topics,:] /= self.beta_matrix[:self.n_fixed_topics,:].sum(axis=1)[:,None]
-		print "Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh)
+		print("Matched {}/{} topics at prob_thresh={}".format(self.n_fixed_topics,len(topics),prob_thresh))
 
 	def normalise_intensities(self):
 		for doc in self.corpus:
@@ -178,8 +178,8 @@ class VariationalLDA(object):
 			for word in self.corpus[doc]:
 				self.corpus[doc][word] = int(self.normalise*self.corpus[doc][word]/max_i)
 
-    # Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
-    # these are added here
+	# Load the features from a Joe .csv file. Pass the file name up until the _ms1.csv or _ms2.csv
+	# these are added here
 	# The scale factor is what we multiply intensities by
 	def load_features_from_csv(self,prefix,scale_factor=100.0):
 		# Load the MS1 peaks (MS1 object defined below)
@@ -187,22 +187,22 @@ class VariationalLDA(object):
 		self.doc_metadata = {}
 		ms1file = prefix + '_ms1.csv'
 		with open(ms1file,'r') as f:
-		    heads = f.readline()
-		    for line in f:
-		        split_line = line.split(',')
-		        ms1_id = split_line[1]
-		        mz = float(split_line[5])
-		        rt = float(split_line[4])
-		        name = split_line[5] + '_' + split_line[4]
-		        intensity = float(split_line[6])
-		        new_ms1 = MS1(ms1_id,mz,rt,intensity,name)
-		        self.ms1peaks.append(name)
-		        self.doc_metadata[name] = {}
-		        self.doc_metadata[name]['parentmass'] = mz
-		        self.doc_metadata[name]['rt'] = rt
-		        self.doc_metadata[name]['intensity'] = intensity
-		        self.doc_metadata[name]['id'] = ms1_id
-		print "Loaded {} MS1 peaks".format(len(self.ms1peaks))
+			heads = f.readline()
+			for line in f:
+				split_line = line.split(',')
+				ms1_id = split_line[1]
+				mz = float(split_line[5])
+				rt = float(split_line[4])
+				name = split_line[5] + '_' + split_line[4]
+				intensity = float(split_line[6])
+				new_ms1 = MS1(ms1_id,mz,rt,intensity,name)
+				self.ms1peaks.append(name)
+				self.doc_metadata[name] = {}
+				self.doc_metadata[name]['parentmass'] = mz
+				self.doc_metadata[name]['rt'] = rt
+				self.doc_metadata[name]['intensity'] = intensity
+				self.doc_metadata[name]['id'] = ms1_id
+		print("Loaded {} MS1 peaks".format(len(self.ms1peaks)))
 		parent_id_list = [self.doc_metadata[name]['id'] for name in self.ms1peaks]
 
 		# Load the ms2 objects
@@ -210,55 +210,55 @@ class VariationalLDA(object):
 		features = []
 		self.corpus = {}
 		with open(frag_file,'r') as f:
-		    heads = f.readline().split(',')
-		    for line in f:
-		        split_line = line.rstrip().split(',')
-		        frag_name = split_line[10]
-		        if not frag_name == 'NA':
-		            frag_name = frag_name[1:-1]
-		        frag_id = 'fragment_' + frag_name
+			heads = f.readline().split(',')
+			for line in f:
+				split_line = line.rstrip().split(',')
+				frag_name = split_line[10]
+				if not frag_name == 'NA':
+					frag_name = frag_name[1:-1]
+				frag_id = 'fragment_' + frag_name
 
-		        loss_name = split_line[11]
-		        if not loss_name == 'NA':
-		            loss_name = loss_name[1:-1]
-		        loss_id = 'loss_' + loss_name
+				loss_name = split_line[11]
+				if not loss_name == 'NA':
+					loss_name = loss_name[1:-1]
+				loss_id = 'loss_' + loss_name
 
-		        if not frag_id == "fragment_NA":
-		            if not frag_id in features:
-		                features.append(frag_id)
-		            frag_idx = features.index(frag_id)
+				if not frag_id == "fragment_NA":
+					if not frag_id in features:
+						features.append(frag_id)
+					frag_idx = features.index(frag_id)
 
-		        if not loss_id == "loss_NA":
-		            if not loss_id in features:
-		                features.append(loss_id)
-		            loss_idx = features.index(loss_id)
+				if not loss_id == "loss_NA":
+					if not loss_id in features:
+						features.append(loss_id)
+					loss_idx = features.index(loss_id)
 
-		        intensity = float(split_line[6])
+				intensity = float(split_line[6])
 
-		        parent_id = split_line[2]
+				parent_id = split_line[2]
 				# Find the parent
-		        parent = self.ms1peaks[parent_id_list.index(parent_id)]
+				parent = self.ms1peaks[parent_id_list.index(parent_id)]
 
-		        # If we've not seen this parent before, create it as an empty dict
-		        if not parent in self.corpus:
-		            self.corpus[parent] = {}
+				# If we've not seen this parent before, create it as an empty dict
+				if not parent in self.corpus:
+					self.corpus[parent] = {}
 
-		        # Store the ms2 features in the parent dictionary
-		        if not frag_id == "fragment_NA":
-		            self.corpus[parent][frag_id] = intensity * scale_factor
-		        if not loss_id == "loss_NA":
-		            self.corpus[parent][loss_id] = intensity * scale_factor
+				# Store the ms2 features in the parent dictionary
+				if not frag_id == "fragment_NA":
+					self.corpus[parent][frag_id] = intensity * scale_factor
+				if not loss_id == "loss_NA":
+					self.corpus[parent][loss_id] = intensity * scale_factor
 
 		self.n_docs = len(self.corpus)
 		if self.word_index == None:
 			self.word_index = self.find_unique_words()
-		print "Object created with {} documents".format(self.n_docs)
+		print("Object created with {} documents".format(self.n_docs))
 		self.n_words = len(self.word_index)
 
 		# I don't think this does anything - I will check
 		self.make_doc_index()
 		if self.normalise > -1:
-			print "Normalising intensities"
+			print("Normalising intensities")
 			self.normalise_intensities()
 
 	# Run the VB inference. Verbose = True means it gives output each iteration
@@ -267,9 +267,9 @@ class VariationalLDA(object):
 	# First time its run, initialise has to be True
 	def run_vb(self,n_its = 1,verbose=True,initialise=True):
 		if initialise:
-			print "Initialising"
+			print("Initialising")
 			self.init_vb()
-		print "Starting iterations"
+		print("Starting iterations")
 		for it in range(n_its):
 			start_time = time.clock()
 			diff = self.vb_step()
@@ -277,7 +277,7 @@ class VariationalLDA(object):
 			self.its_performed += 1
 			estimated_finish = ((end_time - start_time)*(n_its - it)/60.0)
 			if verbose:
-				print "Iteration {} (change = {}) ({} seconds, I think I'll finish in {:06.2f} minutes)".format(it,diff,end_time - start_time,estimated_finish)
+				print("Iteration {} (change = {}) ({} seconds, I think I'll finish in {:06.2f} minutes)".format(it,diff,end_time - start_time,estimated_finish))
 
 	# D a VB step
 	def vb_step(self):
@@ -299,25 +299,25 @@ class VariationalLDA(object):
 
 	# Newton-Raphson procedure for updating alpha
 	def alpha_nr(self,maxit=20,init_alpha=[]):
-	    M,K = self.gamma_matrix.shape
-	    if not len(init_alpha) > 0:
-	        init_alpha = self.gamma_matrix.mean(axis=0)/K
-	    alpha = init_alpha.copy()
-	    alphap = init_alpha.copy()
-	    g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
-	    for it in range(maxit):
-	        grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
-	        H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
-	        alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
-	        if (alpha_new < 0).sum() > 0:
-	            init_alpha /= 10.0
-	            return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
+		M,K = self.gamma_matrix.shape
+		if not len(init_alpha) > 0:
+			init_alpha = self.gamma_matrix.mean(axis=0)/K
+		alpha = init_alpha.copy()
+		alphap = init_alpha.copy()
+		g_term = (psi(self.gamma_matrix) - psi(self.gamma_matrix.sum(axis=1))[:,None]).sum(axis=0)
+		for it in range(maxit):
+			grad = M *(psi(alpha.sum()) - psi(alpha)) + g_term
+			H = -M*np.diag(pg(1,alpha)) + M*pg(1,alpha.sum())
+			alpha_new = alpha - np.dot(np.linalg.inv(H),grad)
+			if (alpha_new < 0).sum() > 0:
+				init_alpha /= 10.0
+				return self.alpha_nr(maxit=maxit,init_alpha = init_alpha)
 
-	        diff = np.sum(np.abs(alpha-alpha_new))
-	        alpha = alpha_new
-	        if diff < 1e-6 and it > 1:
-	            return alpha
-	    return alpha
+			diff = np.sum(np.abs(alpha-alpha_new))
+			alpha = alpha_new
+			if diff < 1e-6 and it > 1:
+				return alpha
+		return alpha
 
 	# TODO: tidy up and comment this function
 	def e_step(self):
@@ -348,7 +348,7 @@ class VariationalLDA(object):
 				if not word in word_index:
 					word_index[word] = pos
 					pos += 1
-		print "Found {} unique words".format(len(word_index))
+		print("Found {} unique words".format(len(word_index)))
 		return word_index
 
 	# Pretty sure this matrix is never used
@@ -445,57 +445,57 @@ class VariationalLDA(object):
 		# Create the inverse indexes
 		wi = []
 		for i in self.word_index:
-		    wi.append((i,self.word_index[i]))
+			wi.append((i,self.word_index[i]))
 		wi = sorted(wi,key = lambda x: x[1])
 
 		di = []
 		for i in self.doc_index:
-		    di.append((i,self.doc_index[i]))
+			di.append((i,self.doc_index[i]))
 		di = sorted(di,key=lambda x: x[1])
 
-		ri,i = zip(*wi)
+		ri,i = list(zip(*wi))
 		ri = list(ri)
-		di,i = zip(*di)
+		di,i = list(zip(*di))
 		di = list(di)
 
 		# make a reverse index for topics
 		tp = [(topic,self.topic_index[topic]) for topic in self.topic_index]
 		tp = sorted(tp,key = lambda x: x[1])
-		reverse,_ = zip(*tp)
+		reverse,_ = list(zip(*tp))
 
 		for k in range(self.K):
-		    pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
-		    motif_name = reverse[k]
-		    # motif_name = 'motif_{}'.format(k)
-		    lda_dict['beta'][motif_name] = {}
-		    for p in pos:
-		        word_name = ri[p]
-		        lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
+			pos = np.where(self.beta_matrix[k,:]>min_prob_to_keep_beta)[0]
+			motif_name = reverse[k]
+			# motif_name = 'motif_{}'.format(k)
+			lda_dict['beta'][motif_name] = {}
+			for p in pos:
+				word_name = ri[p]
+				lda_dict['beta'][motif_name][word_name] = self.beta_matrix[k,p]
 
 		eth = self.get_expect_theta()
 		lda_dict['theta'] = {}
 		for i,t in enumerate(eth):
-		    doc = di[i]
-		    lda_dict['theta'][doc] = {}
-		    pos = np.where(t > min_prob_to_keep_theta)[0]
-		    for p in pos:
-		    	motif_name = reverse[p]
-		        # motif_name = 'motif_{}'.format(p)
-		        lda_dict['theta'][doc][motif_name] = t[p]
+			doc = di[i]
+			lda_dict['theta'][doc] = {}
+			pos = np.where(t > min_prob_to_keep_theta)[0]
+			for p in pos:
+				motif_name = reverse[p]
+				# motif_name = 'motif_{}'.format(p)
+				lda_dict['theta'][doc][motif_name] = t[p]
 
 		lda_dict['phi'] = {}
 		ndocs = 0
 		for doc in self.corpus:
-		    ndocs += 1
-		    lda_dict['phi'][doc] = {}
-		    for word in self.corpus[doc]:
-		        lda_dict['phi'][doc][word] = {}
-		        pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
-		        for p in pos:
-		            motif_name = reverse[p]
-		            lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
-		    if ndocs % 500 == 0:
-		        print "Done {}".format(ndocs)
+			ndocs += 1
+			lda_dict['phi'][doc] = {}
+			for word in self.corpus[doc]:
+				lda_dict['phi'][doc][word] = {}
+				pos = np.where(self.phi_matrix[doc][word] >= min_prob_to_keep_phi)[0]
+				for p in pos:
+					motif_name = reverse[p]
+					lda_dict['phi'][doc][word][motif_name] = self.phi_matrix[doc][word][p]
+			if ndocs % 500 == 0:
+				print("Done {}".format(ndocs))
 
 		if not filename == None:
 			with open(filename,'w') as f:
@@ -505,11 +505,11 @@ class VariationalLDA(object):
 
 # MS1 object used by Variational Bayes LDA
 class MS1(object):
-    def __init__(self,ms1_id,mz,rt,intensity,name):
-        self.ms1_id = ms1_id
-        self.mz = mz
-        self.rt = rt
-        self.intensity = intensity
-        self.name = name
-    def __str__(self):
-        return self.name
+	def __init__(self,ms1_id,mz,rt,intensity,name):
+		self.ms1_id = ms1_id
+		self.mz = mz
+		self.rt = rt
+		self.intensity = intensity
+		self.name = name
+	def __str__(self):
+		return self.name

@@ -9,10 +9,10 @@ import random
 import socket
 import sys
 import threading
-from urllib import urlopen, pathname2url
-import urlparse
+from urllib.request import urlopen, pathname2url
+import urllib.parse
 import webbrowser
-import StringIO
+import io
 from . import urls
 import os
 
@@ -30,7 +30,7 @@ You must interrupt the kernel to end this command
 
 try:
     # Python 2.x
-    import BaseHTTPServer as server
+    import http.server as server
 except ImportError:
     # Python 3.x
     from http import server
@@ -44,7 +44,7 @@ class GlobalVariable(object):
 def get_url_path(relative_path):
     abs_path = os.path.abspath(relative_path)
     url = pathname2url(abs_path)
-    return urlparse.urljoin('file:', url)
+    return urllib.parse.urljoin('file:', url)
 
 def generate_handler(html, files=None, topic_plotter=None):
 
@@ -53,12 +53,12 @@ def generate_handler(html, files=None, topic_plotter=None):
 
     logo_url = get_url_path(urls.DEFAULT_LOGO_LOCAL)
     show_graph_url = get_url_path(urls.DEFAULT_SHOW_GRAPH_LOCAL)
-    print "logo_url is " + logo_url
-    print "show_graph_url is " + show_graph_url
+    print("logo_url is " + logo_url)
+    print("show_graph_url is " + show_graph_url)
 
     # add default images to files
-    logo_content = StringIO.StringIO(urlopen(logo_url).read()).read()
-    show_graph_content = StringIO.StringIO(urlopen(show_graph_url).read()).read()
+    logo_content = io.StringIO(urlopen(logo_url).read()).read()
+    show_graph_content = io.StringIO(urlopen(show_graph_url).read()).read()
     files['/images/default_logo.png'] = ('image/png', logo_content)
     files['/images/graph_example.jpg'] = ('image/jpg', show_graph_content)
 
@@ -83,7 +83,7 @@ def generate_handler(html, files=None, topic_plotter=None):
 
                 # get everything after '?'
                 path, tmp = self.path.split('?', 1)
-                qs = urlparse.parse_qs(tmp)
+                qs = urllib.parse.parse_qs(tmp)
                 action = qs['action'][0]
 
                 if action == 'set':
@@ -115,7 +115,7 @@ def generate_handler(html, files=None, topic_plotter=None):
                 if fig is not None:
                     # topic has some ms1 plot
                     canvas = FigureCanvas(fig)
-                    output = StringIO.StringIO()
+                    output = io.StringIO()
                     canvas.print_png(output)
                     content = output.getvalue()
                     content_type = 'image/png'
@@ -134,7 +134,7 @@ def generate_handler(html, files=None, topic_plotter=None):
 
                 # get everything after '?'
                 path, tmp = self.path.split('?', 1)
-                qs = urlparse.parse_qs(tmp)
+                qs = urllib.parse.parse_qs(tmp)
                 degree = qs['degree'][0]
                 GlobalVariable.degree = int(degree)
 
@@ -147,8 +147,8 @@ def generate_handler(html, files=None, topic_plotter=None):
             # handle request for the clickable graph
             elif self.path.startswith('/graph.json'):
 
-                print "Serving dynamic json file -- threshold = " + str(GlobalVariable.degree)
-                print "to_highlight = " + str(topic_plotter.to_highlight)
+                print("Serving dynamic json file -- threshold = " + str(GlobalVariable.degree))
+                print("to_highlight = " + str(topic_plotter.to_highlight))
                 json_data, G = lda_visualisation.get_json_from_docdf(topic_plotter.docdf.transpose(),
                                                                   topic_plotter.to_highlight,
                                                                   GlobalVariable.degree)
@@ -254,7 +254,7 @@ def serve(html, ip='127.0.0.1', port=8888, n_retries=50, files=None,
             print(IPYTHON_WARNING)
 
     # Start the server
-    print("Serving to http://{0}:{1}/    [Ctrl-C to exit]".format(ip, port))
+    print(("Serving to http://{0}:{1}/    [Ctrl-C to exit]".format(ip, port)))
     sys.stdout.flush()
 
     if open_browser:
